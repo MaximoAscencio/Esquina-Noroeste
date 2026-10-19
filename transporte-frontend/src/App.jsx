@@ -137,22 +137,12 @@ function App() {
   return (
     <div className="app">
       {/* ENCABEZADO */}
-      <header className="encabezado">
-        <div className="marca">
-          <span className="marca-icono">↖</span>
-          <span>Transporte<span className="marca-acento">IO</span></span>
-        </div>
-
-        <span className="encabezado-materia">
-          Investigación de Operaciones
-        </span>
-      </header>
+      
 
       <main>
         {/* PRESENTACIÓN */}
-        <section className="presentacion">
-          <span className="etiqueta">MODELO DE TRANSPORTE</span>
 
+        <section className="presentacion">
           <h1>Método de la Esquina Noroeste</h1>
 
           <p>
@@ -160,6 +150,7 @@ function App() {
             transporte para preparar tu problema.
           </p>
         </section>
+
 
         {/* PANEL PRINCIPAL */}
         <section className="panel">
