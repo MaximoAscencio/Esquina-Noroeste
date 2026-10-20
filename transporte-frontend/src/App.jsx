@@ -1,9 +1,11 @@
+
 import { useState } from 'react'
 import MatrizCostos from './components/MatrizCostos'
 import ConfiguracionProblema from './components/ConfiguracionProblema'
+import Resultados from './components/Resultados'
+import { esquinaNoroeste } from './algorithms/esquinaNoroeste'
 import './App.css'
 
-// Datos iniciales del problema de transporte
 const costosIniciales = [
   [10, 2, 20, 11],
   [12, 7, 9, 20],
@@ -13,26 +15,31 @@ const costosIniciales = [
 const ofertaInicial = [15, 25, 10]
 const demandaInicial = [5, 15, 15, 15]
 
+// Convertir datos numéricos a texto para los campos
+const comoTexto = valores => valores.map(String)
+const matrizComoTexto = matriz =>
+  matriz.map(fila => fila.map(String))
+
 function App() {
-  // Datos que puede modificar el usuario
-  const [costos, setCostos] = useState(costosIniciales)
-  const [oferta, setOferta] = useState(ofertaInicial)
-  const [demanda, setDemanda] = useState(demandaInicial)
-  const [mostrarJSON, setMostrarJSON] = useState(false)
+  const [costos, setCostos] = useState(
+    () => matrizComoTexto(costosIniciales)
+  )
+  const [oferta, setOferta] = useState(
+    () => comoTexto(ofertaInicial)
+  )
+  const [demanda, setDemanda] = useState(
+    () => comoTexto(demandaInicial)
+  )
 
+  const [resultado, setResultado] = useState(null)
+  const [datosResueltos, setDatosResueltos] = useState(null)
+  const [error, setError] = useState('')
 
-  const datosParaEnviar = {
-    costos: costos.map(fila => fila.map(Number)),
-    oferta: oferta.map(Number),
-    demanda: demanda.map(Number)
-  }
-
-  // Permite conservar una celda vacía mientras se edita
+  // Conservar exactamente lo escrito
   function convertirValor(valor) {
-    return valor === '' ? '' : Number(valor)
+    return valor
   }
 
-  // Modificar un costo de la matriz
   function actualizarCosto(fila, columna, valor) {
     setCostos(actual =>
       actual.map((filaActual, i) =>
@@ -45,7 +52,6 @@ function App() {
     )
   }
 
-  // Modificar la oferta de un origen
   function actualizarOferta(fila, valor) {
     setOferta(actual =>
       actual.map((cantidad, i) =>
@@ -54,7 +60,6 @@ function App() {
     )
   }
 
-  // Modificar la demanda de un destino
   function actualizarDemanda(columna, valor) {
     setDemanda(actual =>
       actual.map((cantidad, j) =>
@@ -63,34 +68,42 @@ function App() {
     )
   }
 
-  // Cambiar el número de orígenes
+  // De 1 a 10 orígenes
   function cambiarOrigenes(valor) {
     const cantidad = Number(valor)
+
+    if (!Number.isInteger(cantidad) ||
+        cantidad < 1 || cantidad > 10) return
 
     setCostos(actual =>
       Array.from(
         { length: cantidad },
-        (_, i) => actual[i] ?? Array(demanda.length).fill(0)
+        (_, i) => actual[i]
+          ? [...actual[i]]
+          : Array(demanda.length).fill('0')
       )
     )
 
     setOferta(actual =>
       Array.from(
         { length: cantidad },
-        (_, i) => actual[i] ?? 0
+        (_, i) => actual[i] ?? '0'
       )
     )
   }
 
-  // Cambiar el número de destinos
+  // De 1 a 10 destinos
   function cambiarDestinos(valor) {
     const cantidad = Number(valor)
+
+    if (!Number.isInteger(cantidad) ||
+        cantidad < 1 || cantidad > 10) return
 
     setCostos(actual =>
       actual.map(fila =>
         Array.from(
           { length: cantidad },
-          (_, j) => fila[j] ?? 0
+          (_, j) => fila[j] ?? '0'
         )
       )
     )
@@ -98,19 +111,30 @@ function App() {
     setDemanda(actual =>
       Array.from(
         { length: cantidad },
-        (_, j) => actual[j] ?? 0
+        (_, j) => actual[j] ?? '0'
       )
     )
   }
 
-  // Restaurar los datos originales
   function restaurarEjemplo() {
-    setCostos(costosIniciales.map(fila => [...fila]))
-    setOferta([...ofertaInicial])
-    setDemanda([...demandaInicial])
+    setCostos(matrizComoTexto(costosIniciales))
+    setOferta(comoTexto(ofertaInicial))
+    setDemanda(comoTexto(demandaInicial))
+
+    setResultado(null)
+    setDatosResueltos(null)
+    setError('')
   }
 
-  // Totales de oferta y demanda
+  const valores = [...costos.flat(), ...oferta, ...demanda]
+
+  const datosValidos = valores.every(valor =>
+    valor !== '' &&
+    valor.trim() !== '' &&
+    Number.isFinite(Number(valor)) &&
+    Number(valor) >= 0
+  )
+
   const totalOferta = oferta.reduce(
     (suma, valor) => suma + Number(valor || 0), 0
   )
@@ -119,143 +143,164 @@ function App() {
     (suma, valor) => suma + Number(valor || 0), 0
   )
 
-  // Comprobación básica de los datos
-  const valores = [...costos.flat(), ...oferta, ...demanda]
-
-  const datosValidos = valores.every(
-    valor =>
-      valor !== '' &&
-      Number.isFinite(Number(valor)) &&
-      Number(valor) >= 0
-  )
+  // Los problemas no balanceados también son válidos
+  const puedeResolver =
+    datosValidos &&
+    (totalOferta > 0 || totalDemanda > 0)
 
   const balanceado =
-    datosValidos &&
-    totalOferta > 0 &&
     Math.abs(totalOferta - totalDemanda) < 1e-9
+
+  // Comparar los datos actuales con los ya resueltos
+  const datosActuales = JSON.stringify({
+    costos: costos.map(fila => fila.map(Number)),
+    oferta: oferta.map(Number),
+    demanda: demanda.map(Number)
+  })
+
+  const resultadosVigentes =
+    datosValidos &&
+    datosResueltos !== null &&
+    JSON.stringify(datosResueltos) === datosActuales
+
+  function resolverProblema() {
+    if (!puedeResolver) {
+      setError('Introduce valores válidos y oferta o demanda positiva.')
+      return
+    }
+
+    const datos = {
+      costos: costos.map(fila => fila.map(Number)),
+      oferta: oferta.map(Number),
+      demanda: demanda.map(Number)
+    }
+
+    try {
+      const solucion = esquinaNoroeste(
+        datos.costos,
+        datos.oferta,
+        datos.demanda
+      )
+
+      setResultado(solucion)
+      setDatosResueltos(datos)
+      setError('')
+    } catch (err) {
+      setResultado(null)
+      setDatosResueltos(null)
+      setError(err.message)
+    }
+  }
 
   return (
     <div className="app">
-      {/* ENCABEZADO */}
-      
-
       <main>
-        {/* PRESENTACIÓN */}
-
         <section className="presentacion">
           <h1>Método de la Esquina Noroeste</h1>
-
           <p>
-            Configura los orígenes, destinos y costos de
-            transporte para preparar tu problema.
+            Resuelve problemas de transporte balanceados
+            y no balanceados, mostrando cada asignación
+            del Método de la Esquina Noroeste.
           </p>
         </section>
 
-
-        {/* PANEL PRINCIPAL */}
         <section className="panel">
           <div className="panel-encabezado">
             <div>
               <h2>Datos del problema</h2>
               <p>
-                Ingresa los costos unitarios, la oferta y
-                la demanda.
+                Ingresa los costos unitarios, las ofertas
+                y las demandas.
               </p>
             </div>
 
             <button
-              className="boton-secundario"
               type="button"
+              className="boton-secundario"
               onClick={restaurarEjemplo}
             >
               Restaurar ejemplo
             </button>
           </div>
 
-          
-            {/* CONFIGURACIÓN */}
-            <ConfiguracionProblema
-              numeroOrigenes={costos.length}
-              numeroDestinos={demanda.length}
-              cambiarOrigenes={cambiarOrigenes}
-              cambiarDestinos={cambiarDestinos}
-            />
+          <ConfiguracionProblema
+            numeroOrigenes={costos.length}
+            numeroDestinos={demanda.length}
+            cambiarOrigenes={cambiarOrigenes}
+            cambiarDestinos={cambiarDestinos}
+          />
 
+          <MatrizCostos
+            costos={costos}
+            oferta={oferta}
+            demanda={demanda}
+            actualizarCosto={actualizarCosto}
+            actualizarOferta={actualizarOferta}
+            actualizarDemanda={actualizarDemanda}
+          />
 
-        
-            {/* MATRIZ */}
-            <MatrizCostos
-              costos={costos}
-              oferta={oferta}
-              demanda={demanda}
-              actualizarCosto={actualizarCosto}
-              actualizarOferta={actualizarOferta}
-              actualizarDemanda={actualizarDemanda}
-            />
-
-            
-            {/* RESUMEN DE OFERTA Y DEMANDA */}
-            <div className="resumen">
-              <div className="resumen-dato">
-                <span>Oferta total</span>
-                <strong>{totalOferta}</strong>
-              </div>
-
-              <div className="resumen-dato">
-                <span>Demanda total</span>
-                <strong>{totalDemanda}</strong>
-              </div>
+          <div className="resumen">
+            <div className="resumen-dato">
+              <span>Oferta total</span>
+              <strong>{totalOferta}</strong>
             </div>
 
-            {/* ESTADO DEL PROBLEMA */}
-            <div
-              className={`estado ${balanceado ? 'correcto' : 'advertencia'}`}
-              role="status"
-            >
-              {!datosValidos
-                ? 'Revisa los datos: hay celdas vacías o valores negativos.'
+            <div className="resumen-dato">
+              <span>Demanda total</span>
+              <strong>{totalDemanda}</strong>
+            </div>
+          </div>
+
+          <div
+            className={`estado ${
+              !puedeResolver
+                ? 'advertencia'
+                : balanceado
+                  ? 'correcto'
+                  : 'advertencia'
+            }`}
+            role="status"
+          >
+            {!datosValidos
+              ? 'Revisa los datos: hay valores inválidos o celdas vacías.'
+              : !puedeResolver
+                ? 'Ingresa una oferta o demanda positiva.'
                 : balanceado
                   ? 'Problema balanceado: oferta y demanda coinciden.'
-                  : 'Problema no balanceado: oferta y demanda son diferentes o están vacías.'}
+                  : 'Problema no balanceado: se agregará un origen o destino ficticio automáticamente.'}
+          </div>
+
+          <div className="acciones">
+            <button
+              type="button"
+              className="boton-principal"
+              disabled={!puedeResolver}
+              onClick={resolverProblema}
+            >
+              Resolver por Esquina Noroeste
+            </button>
+          </div>
+
+          {error && (
+            <div className="estado advertencia" role="alert">
+              {error}
             </div>
-
-            
-            {/* PREPARACIÓN DE DATOS */}
-            <div className="acciones">
-              <button
-                type="button"
-                className="boton-principal"
-                disabled={!balanceado}
-                onClick={() => setMostrarJSON(actual => !actual)}
-              >
-                {mostrarJSON ? 'Ocultar JSON' : 'Preparar datos'}
-              </button>
-            </div>
-
-            {/* VISTA PREVIA DEL JSON */}
-            {mostrarJSON && balanceado && (
-              <div className="vista-json">
-                <h3>Datos preparados para el backend</h3>
-
-                <p>
-                  Esta es la información que posteriormente
-                  enviaremos al servidor.
-                </p>
-
-                <pre>
-                  {JSON.stringify(datosParaEnviar, null, 2)}
-                </pre>
-              </div>
-            )}
-
-
-
+          )}
         </section>
 
+        {resultado && resultadosVigentes && (
+          <Resultados
+            key={JSON.stringify(datosResueltos)}
+            resultado={resultado}
+          />
+        )}
+
         <div className="nota">
-          <strong>Siguiente etapa:</strong> conectaremos
-          el formulario con el backend para resolver el
-          problema y mostrar las iteraciones.
+          <strong>Nota:</strong> El Método de la Esquina
+          Noroeste proporciona una solución inicial.
+          Si el problema no está balanceado, se incorpora
+          un origen o destino ficticio con costo cero.
+          El método no garantiza el costo mínimo posible.
         </div>
       </main>
     </div>

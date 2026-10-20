@@ -5,6 +5,11 @@ function ConfiguracionProblema({
   cambiarOrigenes,
   cambiarDestinos
 }) {
+  const opciones = Array.from(
+    { length: 10 },
+    (_, i) => i + 1
+  )
+
   return (
     <div className="configuracion">
 
@@ -13,9 +18,11 @@ function ConfiguracionProblema({
 
         <select
           value={numeroOrigenes}
-          onChange={(e) => cambiarOrigenes(e.target.value)}
+          onChange={(e) =>
+            cambiarOrigenes(e.target.value)
+          }
         >
-          {[1, 2, 3, 4, 5, 6].map((numero) => (
+          {opciones.map(numero => (
             <option key={numero} value={numero}>
               {numero}
             </option>
@@ -28,9 +35,11 @@ function ConfiguracionProblema({
 
         <select
           value={numeroDestinos}
-          onChange={(e) => cambiarDestinos(e.target.value)}
+          onChange={(e) =>
+            cambiarDestinos(e.target.value)
+          }
         >
-          {[1, 2, 3, 4, 5, 6].map((numero) => (
+          {opciones.map(numero => (
             <option key={numero} value={numero}>
               {numero}
             </option>
