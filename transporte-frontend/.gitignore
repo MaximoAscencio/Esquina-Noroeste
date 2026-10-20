@@ -7,6 +7,9 @@ dist/
 build/
 coverage/
 
+# Ejecutables de Electron
+release/
+
 # Variables de entorno
 .env
 .env.*
