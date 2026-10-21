@@ -4,40 +4,88 @@ import { useState } from 'react'
 function Resultados({ resultado }) {
   const [pasoActual, setPasoActual] = useState(0)
 
-  const {
-    costos,
-    oferta,
-    demanda,
-    pasos,
-    asignaciones,
-    costoTotal,
-    totalUnidades,
-    ficticio,
-    balanceadoOriginal,
-    totalOfertaOriginal,
-    totalDemandaOriginal
-  } = resultado
-
-  const terminado = pasoActual === pasos.length
-  const paso = pasoActual > 0 ? pasos[pasoActual - 1] : null
-
-  const matrizActual = paso
-    ? paso.asignaciones
-    : costos.map(fila => fila.map(() => 0))
-
-  const ofertaActual = paso ? paso.ofertaRestante : oferta
-  const demandaActual = paso ? paso.demandaRestante : demanda
-
-  function nombreOrigen(i) {
-    return ficticio?.tipo === 'origen' && ficticio.indice === i
-      ? 'Origen ficticio'
-      : `O${i + 1}`
+  // Validar que recibimos una solución
+  if (!resultado) {
+    return (
+      <section className="resultados">
+        <p>No hay resultados disponibles.</p>
+      </section>
+    )
   }
 
+  const {
+    costos = [],
+    oferta = [],
+    demanda = [],
+    pasos = [],
+    asignaciones = [],
+    costoTotal = 0,
+    totalUnidades = 0,
+    ficticio = null,
+    balanceadoOriginal = true,
+    totalOfertaOriginal = 0,
+    totalDemandaOriginal = 0
+  } = resultado
+
+  // Detectar información incompleta
+  console.log('DATOS RECIBIDOS EN RESULTADOS:', resultado)
+  
+  const datosCompletos =
+    Array.isArray(costos) &&
+    Array.isArray(oferta) &&
+    Array.isArray(demanda) &&
+    Array.isArray(pasos) &&
+    Array.isArray(asignaciones) &&
+    costos.length > 0 &&
+    demanda.length > 0 &&
+    costos.length === oferta.length &&
+    costos.every(
+      fila => Array.isArray(fila) &&
+      fila.length === demanda.length
+    )
+
+  if (!datosCompletos) {
+    return (
+      <section className="resultados">
+        <h2>Error al mostrar la resolución</h2>
+        <p>
+          El algoritmo no devolvió una matriz completa.
+          Revisa el archivo esquinaNoroeste.js.
+        </p>
+      </section>
+    )
+  }
+
+  const terminado = pasoActual >= pasos.length
+
+  const paso = pasoActual > 0
+    ? pasos[Math.min(pasoActual, pasos.length) - 1]
+    : null
+
+  const matrizInicial = costos.map(
+    fila => fila.map(() => 0)
+  )
+
+  const matrizActual = paso?.asignaciones ?? matrizInicial
+  const ofertaActual = paso?.ofertaRestante ?? oferta
+  const demandaActual = paso?.demandaRestante ?? demanda
+
+  // Nombres de orígenes
+  function nombreOrigen(i) {
+    if (ficticio?.tipo === 'origen' && ficticio.indice === i) {
+      return 'Origen ficticio'
+    }
+
+    return `O${i + 1}`
+  }
+
+  // Nombres de destinos
   function nombreDestino(j) {
-    return ficticio?.tipo === 'destino' && ficticio.indice === j
-      ? 'Destino ficticio'
-      : `D${j + 1}`
+    if (ficticio?.tipo === 'destino' && ficticio.indice === j) {
+      return 'Destino ficticio'
+    }
+
+    return `D${j + 1}`
   }
 
   return (
@@ -45,39 +93,55 @@ function Resultados({ resultado }) {
 
       <h2>Resolución por Esquina Noroeste</h2>
 
+      {/* ANÁLISIS INICIAL */}
       <h3>1. Análisis del problema</h3>
 
-      <p>Oferta original: <strong>{totalOfertaOriginal}</strong></p>
-      <p>Demanda original: <strong>{totalDemandaOriginal}</strong></p>
+      <p>
+        Oferta total: <strong>{totalOfertaOriginal}</strong>
+      </p>
+
+      <p>
+        Demanda total: <strong>{totalDemandaOriginal}</strong>
+      </p>
 
       {balanceadoOriginal ? (
         <p>
-          El problema está balanceado. No se necesitan
-          orígenes ni destinos ficticios.
+          El problema está balanceado.
+          No necesitamos agregar orígenes ni destinos ficticios.
         </p>
       ) : (
         <div className="explicacion-paso">
           <h4>Balanceo automático</h4>
 
-          <p>
-            El problema original no está balanceado.
-            Se agregó un <strong>{ficticio.tipo} ficticio</strong>
-            {' '}con {ficticio.cantidad} unidades
-            y costos unitarios iguales a cero.
-          </p>
+          {ficticio ? (
+            <p>
+              Se agregó un {ficticio.tipo} ficticio con
+              {' '}{ficticio.cantidad} unidades y costos
+              unitarios de cero.
+            </p>
+          ) : (
+            <p>
+              El problema necesita balanceo, pero no
+              se recibieron los datos del elemento ficticio.
+            </p>
+          )}
         </div>
       )}
 
+      {/* TABLA DE TRANSPORTE */}
       <h3>2. Matriz de transporte</h3>
 
       <div className="tabla-scroll">
         <table className="tabla-resultado">
+
           <thead>
             <tr>
               <th>Origen</th>
+
               {demanda.map((_, j) => (
                 <th key={j}>{nombreDestino(j)}</th>
               ))}
+
               <th>Oferta restante</th>
             </tr>
           </thead>
@@ -87,26 +151,28 @@ function Resultados({ resultado }) {
               <tr key={i}>
                 <th>{nombreOrigen(i)}</th>
 
-                {fila.map((costo, j) => (
-                  <td
-                    key={j}
-                    className={
-                      paso?.fila === i && paso?.columna === j
-                        ? 'celda-activa'
-                        : ''
-                    }
-                  >
-                    <span className="costo-unitario">
-                      Costo: {costo}
-                    </span>
+                {fila.map((costo, j) => {
+                  const activa =
+                    paso?.fila === i &&
+                    paso?.columna === j
 
-                    <strong className="cantidad-asignada">
-                      {matrizActual[i][j]}
-                    </strong>
-                  </td>
-                ))}
+                  return (
+                    <td
+                      key={j}
+                      className={activa ? 'celda-activa' : ''}
+                    >
+                      <span className="costo-unitario">
+                        Costo: {costo}
+                      </span>
 
-                <td>{ofertaActual[i]}</td>
+                      <strong className="cantidad-asignada">
+                        {matrizActual[i]?.[j] ?? 0}
+                      </strong>
+                    </td>
+                  )
+                })}
+
+                <td>{ofertaActual[i] ?? 0}</td>
               </tr>
             ))}
           </tbody>
@@ -114,18 +180,25 @@ function Resultados({ resultado }) {
           <tfoot>
             <tr>
               <th>Demanda restante</th>
-              {demandaActual.map((valor, j) => (
-                <th key={j}>{valor}</th>
+
+              {demanda.map((_, j) => (
+                <th key={j}>
+                  {demandaActual[j] ?? 0}
+                </th>
               ))}
+
               <th>—</th>
             </tr>
           </tfoot>
+
         </table>
       </div>
 
+      {/* PROCEDIMIENTO */}
       <h3>3. Procedimiento paso a paso</h3>
 
       <div className="explicacion-paso">
+
         <h4>
           {paso
             ? `Paso ${pasoActual} de ${pasos.length}`
@@ -134,83 +207,99 @@ function Resultados({ resultado }) {
 
         {!paso ? (
           <p>
-            Comenzaremos en la esquina superior izquierda.
-            Presiona «Siguiente» para asignar unidades.
+            Iniciamos en la esquina superior izquierda
+            de la matriz. Presiona «Siguiente» para
+            realizar la primera asignación.
           </p>
         ) : (
           <>
             <p>
-              Celda seleccionada:
-              <strong> {paso.origen} → {paso.destino}</strong>.
+              <strong>Celda seleccionada:</strong>
+              {' '}{paso.origen} → {paso.destino}.
             </p>
 
             <p>
               Oferta disponible: {paso.ofertaAnterior}.
+              <br />
               Demanda pendiente: {paso.demandaAnterior}.
             </p>
 
             <p>
-              Asignación = mínimo({paso.ofertaAnterior},
-              {' '}{paso.demandaAnterior}) =
-              <strong> {paso.cantidad}</strong> unidades.
+              <strong>Cálculo de asignación:</strong>
+              {' '}mínimo({paso.ofertaAnterior},
+              {' '}{paso.demandaAnterior})
+              {' '}= {paso.cantidad} unidades.
             </p>
 
             <p>
-              Costo del paso: {paso.cantidad} ×
-              {' '}{paso.costoUnitario} =
-              <strong> {paso.costoPaso}</strong>.
+              <strong>Costo de esta operación:</strong>
+              {' '}{paso.cantidad} × {paso.costoUnitario}
+              {' '}= {paso.costoPaso}.
             </p>
 
             <p>
-              Costo acumulado:
-              <strong> {paso.costoAcumulado}</strong>.
+              <strong>Costo acumulado:</strong>
+              {' '}{paso.costoAcumulado}.
             </p>
 
             {paso.esFicticio && (
               <p>
-                Esta es una asignación ficticia.
-                No genera un costo de transporte real.
+                Esta asignación corresponde a un
+                elemento ficticio y su costo es cero.
               </p>
             )}
 
             <p>
-              {paso.ofertaRestante[paso.fila] === 0 &&
-               paso.demandaRestante[paso.columna] === 0
+              {paso.ofertaRestante?.[paso.fila] === 0 &&
+               paso.demandaRestante?.[paso.columna] === 0
                 ? 'Se agotó la oferta y se satisfizo la demanda.'
-                : paso.ofertaRestante[paso.fila] === 0
+                : paso.ofertaRestante?.[paso.fila] === 0
                   ? 'Se agotó la oferta. Avanzamos al siguiente origen.'
                   : 'Se satisfizo la demanda. Avanzamos al siguiente destino.'}
             </p>
           </>
         )}
+
       </div>
 
+      {/* NAVEGACIÓN */}
       <div className="controles-pasos">
+
         <button
           type="button"
           disabled={pasoActual === 0}
-          onClick={() => setPasoActual(actual => actual - 1)}
+          onClick={() =>
+            setPasoActual(actual => Math.max(0, actual - 1))
+          }
         >
           Anterior
         </button>
 
-        <span>Paso {pasoActual} / {pasos.length}</span>
+        <span>
+          Paso {pasoActual} / {pasos.length}
+        </span>
 
         <button
           type="button"
           disabled={terminado}
-          onClick={() => setPasoActual(actual => actual + 1)}
+          onClick={() =>
+            setPasoActual(actual =>
+              Math.min(pasos.length, actual + 1)
+            )
+          }
         >
           Siguiente
         </button>
+
       </div>
 
+      {/* CONCLUSIÓN */}
       {terminado && (
         <div className="conclusion">
 
           <h3>4. Resultado y conclusión</h3>
 
-          <h4>Asignaciones realizadas</h4>
+          <h4>Asignaciones finales</h4>
 
           <ul>
             {asignaciones.flatMap((fila, i) =>
@@ -218,8 +307,8 @@ function Resultados({ resultado }) {
                 cantidad > 0 ? (
                   <li key={`${i}-${j}`}>
                     {nombreOrigen(i)} → {nombreDestino(j)}:
-                    {' '}{cantidad} × {costos[i][j]} =
-                    {' '}{cantidad * costos[i][j]}
+                    {' '}{cantidad} × {costos[i][j]}
+                    {' '}= {cantidad * costos[i][j]}
                   </li>
                 ) : null
               )
@@ -231,34 +320,34 @@ function Resultados({ resultado }) {
           </p>
 
           <p>
-            <strong>Conclusión:</strong> Se resolvió
-            el problema mediante el Método de la
-            Esquina Noroeste, realizando asignaciones
-            por un total de {totalUnidades} unidades
-            en el modelo balanceado.
+            <strong>Conclusión:</strong> Mediante el
+            Método de la Esquina Noroeste se realizaron
+            asignaciones por un total de {totalUnidades}
+            {' '}unidades dentro del modelo balanceado.
           </p>
 
           {ficticio?.tipo === 'destino' && (
             <p>
-              De estas, {ficticio.cantidad} unidades
-              corresponden al destino ficticio y
-              representan oferta disponible no utilizada.
+              Se asignaron {ficticio.cantidad} unidades
+              al destino ficticio, representando
+              oferta no utilizada para destinos reales.
             </p>
           )}
 
           {ficticio?.tipo === 'origen' && (
             <p>
-              El origen ficticio aporta {ficticio.cantidad}
-              {' '}unidades en el modelo, que representan
-              demanda no cubierta por los orígenes reales.
+              El origen ficticio representa
+              {' '}{ficticio.cantidad} unidades
+              de demanda no cubierta por la oferta real.
             </p>
           )}
 
           <p>
-            El costo total obtenido es de {costoTotal}
-            {' '}unidades monetarias. La solución
-            corresponde al Método de la Esquina Noroeste
-            y no garantiza el costo mínimo posible.
+            El costo total calculado es de
+            <strong> {costoTotal}</strong> unidades monetarias.
+            Esta es una solución inicial factible del
+            modelo balanceado, pero no necesariamente
+            representa el costo mínimo posible.
           </p>
 
           <button
@@ -267,6 +356,7 @@ function Resultados({ resultado }) {
           >
             Revisar desde el inicio
           </button>
+
         </div>
       )}
 

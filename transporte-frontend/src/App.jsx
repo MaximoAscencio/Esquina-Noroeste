@@ -181,6 +181,7 @@ function App() {
         datos.oferta,
         datos.demanda
       )
+      console.log('SOLUCIÓN COMPLETA:', solucion)
 
       setResultado(solucion)
       setDatosResueltos(datos)
