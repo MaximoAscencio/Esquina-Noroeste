@@ -5,6 +5,7 @@ import ConfiguracionProblema from './components/ConfiguracionProblema'
 import Resultados from './components/Resultados'
 import { esquinaNoroeste } from './algorithms/esquinaNoroeste'
 import './App.css'
+import './tema.css'
 
 const costosIniciales = [
   [10, 2, 20, 11],
@@ -231,6 +232,7 @@ function App() {
             cambiarDestinos={cambiarDestinos}
           />
 
+
           <MatrizCostos
             costos={costos}
             oferta={oferta}
@@ -238,19 +240,10 @@ function App() {
             actualizarCosto={actualizarCosto}
             actualizarOferta={actualizarOferta}
             actualizarDemanda={actualizarDemanda}
+            totalOferta={totalOferta}
+            totalDemanda={totalDemanda}
+            balanceado={datosValidos && puedeResolver && balanceado}
           />
-
-          <div className="resumen">
-            <div className="resumen-dato">
-              <span>Oferta total</span>
-              <strong>{totalOferta}</strong>
-            </div>
-
-            <div className="resumen-dato">
-              <span>Demanda total</span>
-              <strong>{totalDemanda}</strong>
-            </div>
-          </div>
 
           <div
             className={`estado ${
@@ -295,14 +288,6 @@ function App() {
             resultado={resultado}
           />
         )}
-
-        <div className="nota">
-          <strong>Nota:</strong> El Método de la Esquina
-          Noroeste proporciona una solución inicial.
-          Si el problema no está balanceado, se incorpora
-          un origen o destino ficticio con costo cero.
-          El método no garantiza el costo mínimo posible.
-        </div>
       </main>
     </div>
   )

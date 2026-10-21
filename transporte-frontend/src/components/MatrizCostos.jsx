@@ -1,11 +1,13 @@
-
 function MatrizCostos({
   costos,
   oferta,
   demanda,
   actualizarCosto,
   actualizarOferta,
-  actualizarDemanda
+  actualizarDemanda,
+  totalOferta,
+  totalDemanda,
+  balanceado
 }) {
 
   // Seleccionar el contenido al entrar en una celda
@@ -115,7 +117,44 @@ function MatrizCostos({
                 </td>
               ))}
 
-              <td className="celda-vacia">—</td>
+              
+              {/* Totales en la esquina inferior derecha */}
+              <td
+                className={`celda-balance ${
+                  balanceado ? 'celda-balance--ok' : 'celda-balance--error'
+                }`}
+                aria-label={`Oferta total: ${totalOferta}. Demanda total: ${totalDemanda}. ${
+                  balanceado ? 'Problema balanceado' : 'Problema no balanceado'
+                }`}
+              >
+                <svg
+                  className="celda-balance__diagonal"
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
+                  <line
+                    x1="0"
+                    y1="0"
+                    x2="100"
+                    y2="100"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                </svg>
+
+                <span className="celda-balance__oferta">
+                  <small>Oferta</small>
+                  <strong>{totalOferta}</strong>
+                </span>
+
+                <span className="celda-balance__demanda">
+                  <small>Demanda</small>
+                  <strong>{totalDemanda}</strong>
+                </span>
+              </td>
+
 
             </tr>
 

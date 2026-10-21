@@ -1,0 +1,248 @@
+
+/* PALETA GENERAL */
+:root {
+  --durazno: #FBB195;
+  --coral: #F67280;
+  --malva: #C06C84;
+  --morado: #6C5B7B;
+  --azul: #355C7D;
+
+  --fondo: #FFF5F0;
+  --superficie: #FFFCFA;
+  --borde: #EAD7DF;
+  --texto: #29374A;
+
+  --verde-suave: #E4F2E9;
+  --verde-texto: #306B54;
+
+  --rojo-suave: #FCE5EA;
+  --rojo-texto: #A13C54;
+}
+
+/* FONDO Y TIPOGRAFÍA */
+html,
+body,
+#root {
+  background: var(--fondo);
+  color: var(--texto);
+}
+
+.presentacion h1 {
+  color: var(--azul);
+}
+
+.presentacion p {
+  color: var(--morado);
+}
+
+/* PANELES */
+.panel,
+.resultados {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  box-shadow: 0 8px 28px rgba(108, 91, 123, 0.07);
+}
+
+.panel h2,
+.seccion-matriz h3,
+.resultados h2 {
+  color: var(--morado);
+}
+
+.panel-encabezado p,
+.seccion-matriz p {
+  color: var(--morado);
+}
+
+/* BOTONES */
+.boton-principal,
+.boton-secundario,
+.controles-pasos button,
+.conclusion button {
+  background: var(--coral);
+  color: white;
+  border: none;
+}
+
+.boton-principal:hover,
+.boton-secundario:hover,
+.controles-pasos button:not(:disabled):hover,
+.conclusion button:hover {
+  background: #DC5D72;
+}
+
+.boton-principal:disabled,
+.controles-pasos button:disabled {
+  background: #C8C3CC;
+  color: #5E5863;
+}
+
+/* FORMULARIOS */
+.campo {
+  color: var(--morado);
+}
+
+.campo select,
+.tabla-transporte input {
+  background: white;
+  color: var(--texto);
+  border-color: #DCC3D0;
+}
+
+.campo select:focus,
+.tabla-transporte input:focus {
+  outline: 2px solid var(--malva);
+  border-color: var(--malva);
+}
+
+/* MATRIZ PRINCIPAL */
+.tabla-transporte th,
+.tabla-transporte .fila-demanda th {
+  background: #F6E5EB;
+  color: var(--morado);
+}
+
+.tabla-transporte th,
+.tabla-transporte td {
+  border-color: var(--borde);
+}
+
+.tabla-transporte .columna-oferta {
+  background: #EDF2F8;
+}
+
+.tabla-transporte .fila-demanda td {
+  background: #F8EBF0;
+}
+
+/* CELDA DE BALANCEO */
+.tabla-transporte .fila-demanda .celda-balance--ok {
+  background: var(--verde-suave);
+  color: var(--verde-texto);
+}
+
+.tabla-transporte .fila-demanda .celda-balance--error {
+  background: var(--rojo-suave);
+  color: var(--rojo-texto);
+}
+
+/* MENSAJES DE BALANCEO */
+.estado.correcto {
+  background: var(--verde-suave);
+  color: var(--verde-texto);
+}
+
+.estado.advertencia {
+  background: var(--rojo-suave);
+  color: var(--rojo-texto);
+}
+
+/* SECCIÓN DE RESULTADOS */
+.resultados h3 {
+  color: var(--morado);
+}
+
+.tabla-resultado th,
+.tabla-resultado tfoot th {
+  background: #F5E5EC;
+  color: var(--morado);
+}
+
+.tabla-resultado th,
+.tabla-resultado td {
+  border-color: var(--borde);
+}
+
+.costo-unitario {
+  color: var(--morado);
+}
+
+.cantidad-asignada {
+  color: var(--azul);
+}
+
+/* CELDA SELECCIONADA */
+.tabla-resultado .celda-activa {
+  background: #F9D8E2;
+  outline: 2px solid var(--malva);
+  outline-offset: -2px;
+}
+
+/* PROCEDIMIENTO PASO A PASO */
+.explicacion-paso {
+  background: #FFF2EE;
+  border-left: 4px solid var(--malva);
+}
+
+.explicacion-paso h4 {
+  color: var(--morado);
+}
+
+/* RESULTADO FINAL */
+.conclusion {
+  background: #FFF0E9;
+  border: 1px solid var(--durazno);
+}
+
+.conclusion h3,
+.costo-final {
+  color: var(--azul);
+}
+
+/* VISTA JSON, SI SE UTILIZA */
+.vista-json {
+  background: var(--superficie);
+  border-color: var(--borde);
+}
+
+.vista-json h3 {
+  color: var(--morado);
+}
+
+
+/* =========================================
+   FILAS Y COLUMNAS AGOTADAS
+   ========================================= */
+
+/* Oferta o demanda que llegó a cero */
+.tabla-resultado tbody tr.fila-agotada > th,
+.tabla-resultado tbody tr.fila-agotada > td,
+.tabla-resultado thead th.columna-agotada,
+.tabla-resultado tbody td.columna-agotada,
+.tabla-resultado tfoot th.columna-agotada {
+  background-color: #F6B7C2;
+  color: #8E2F49;
+  border-color: #DEA1B1;
+  transition: background-color 0.2s ease;
+}
+
+/* Cambiar también el color de los números */
+.tabla-resultado tbody tr.fila-agotada .costo-unitario,
+.tabla-resultado tbody tr.fila-agotada .cantidad-asignada,
+.tabla-resultado tbody td.columna-agotada .costo-unitario,
+.tabla-resultado tbody td.columna-agotada .cantidad-asignada {
+  color: #8E2F49;
+}
+
+/* Conservar el borde de la celda seleccionada */
+.tabla-resultado tbody td.celda-activa {
+  outline: 2px solid #A53A57;
+  outline-offset: -2px;
+}
+
+
+/* BOTÓN PARA MOSTRAR LA SOLUCIÓN FINAL */
+
+.controles-pasos .boton-resultado-directo:not(:disabled) {
+  background: var(--morado);
+  color: white;
+}
+
+.controles-pasos .boton-resultado-directo:not(:disabled):hover {
+  background: var(--azul);
+}
+
+.controles-pasos {
+  flex-wrap: wrap;
+}
+

@@ -69,6 +69,8 @@ function Resultados({ resultado }) {
   const matrizActual = paso?.asignaciones ?? matrizInicial
   const ofertaActual = paso?.ofertaRestante ?? oferta
   const demandaActual = paso?.demandaRestante ?? demanda
+  const estaAgotada = valor => valor <= 1e-9
+
 
   // Nombres de orígenes
   function nombreOrigen(i) {
@@ -138,17 +140,37 @@ function Resultados({ resultado }) {
             <tr>
               <th>Origen</th>
 
+              
               {demanda.map((_, j) => (
-                <th key={j}>{nombreDestino(j)}</th>
+                <th
+                  key={j}
+                  className={
+                    estaAgotada(demandaActual[j])
+                      ? 'columna-agotada'
+                      : ''
+                  }
+                >
+                  {nombreDestino(j)}
+                </th>
               ))}
+
 
               <th>Oferta restante</th>
             </tr>
           </thead>
 
           <tbody>
+
             {costos.map((fila, i) => (
-              <tr key={i}>
+              <tr
+                key={i}
+                className={
+                  estaAgotada(ofertaActual[i])
+                    ? 'fila-agotada'
+                    : ''
+                }
+              >
+
                 <th>{nombreOrigen(i)}</th>
 
                 {fila.map((costo, j) => {
@@ -159,8 +181,12 @@ function Resultados({ resultado }) {
                   return (
                     <td
                       key={j}
-                      className={activa ? 'celda-activa' : ''}
+                      className={[
+                        activa && 'celda-activa',
+                        estaAgotada(demandaActual[j]) && 'columna-agotada'
+                      ].filter(Boolean).join(' ')}
                     >
+
                       <span className="costo-unitario">
                         Costo: {costo}
                       </span>
@@ -179,13 +205,20 @@ function Resultados({ resultado }) {
 
           <tfoot>
             <tr>
-              <th>Demanda restante</th>
-
+              <th>Demanda restante</th>   
               {demanda.map((_, j) => (
-                <th key={j}>
+                <th
+                  key={j}
+                  className={
+                    estaAgotada(demandaActual[j])
+                      ? 'columna-agotada'
+                      : ''
+                  }
+                >
                   {demandaActual[j] ?? 0}
                 </th>
               ))}
+
 
               <th>—</th>
             </tr>
@@ -252,10 +285,10 @@ function Resultados({ resultado }) {
             <p>
               {paso.ofertaRestante?.[paso.fila] === 0 &&
                paso.demandaRestante?.[paso.columna] === 0
-                ? 'Se agotó la oferta y se satisfizo la demanda.'
+                ? 'Se agotó la oferta y se satisface la demanda.'
                 : paso.ofertaRestante?.[paso.fila] === 0
                   ? 'Se agotó la oferta. Avanzamos al siguiente origen.'
-                  : 'Se satisfizo la demanda. Avanzamos al siguiente destino.'}
+                  : 'Se satisface la demanda. Avanzamos al siguiente destino.'}
             </p>
           </>
         )}
@@ -278,6 +311,17 @@ function Resultados({ resultado }) {
         <span>
           Paso {pasoActual} / {pasos.length}
         </span>
+
+        
+        <button
+          type="button"
+          className="boton-resultado-directo"
+          disabled={terminado}
+          onClick={() => setPasoActual(pasos.length)}
+        >
+          Ver resultado final
+        </button>
+
 
         <button
           type="button"

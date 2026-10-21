@@ -194,38 +194,78 @@
   background: #eff6ff;
 }
 
-.celda-vacia {
-  color: #94a3b8;
+
+/* CELDA DE TOTALES EN LA MATRIZ */
+
+.tabla-transporte .fila-demanda .celda-balance {
+  position: relative;
+  min-width: 155px;
+  height: 92px;
+  padding: 0;
+  overflow: hidden;
+  color: #166534;
 }
 
-/* RESUMEN */
-.resumen {
-  display: flex;
-  gap: 18px;
-  flex-wrap: wrap;
-  margin-top: 26px;
+/* Problema balanceado: VERDE */
+.tabla-transporte .fila-demanda .celda-balance--ok {
+  background: #dcfce7;
+  color: #166534;
 }
 
-.resumen-dato {
-  flex: 1;
-  min-width: 150px;
+/* Problema no balanceado: ROJO */
+.tabla-transporte .fila-demanda .celda-balance--error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Línea diagonal */
+.celda-balance__diagonal {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.65;
+}
+
+/* Posición de los números */
+.celda-balance__oferta,
+.celda-balance__demanda {
+  position: absolute;
   display: flex;
   flex-direction: column;
-  gap: 7px;
-  padding: 18px;
-  background: #f8fafc;
-  border-radius: 10px;
+  line-height: 1.1;
+  gap: 4px;
 }
 
-.resumen-dato span {
-  color: #64748b;
-  font-size: 13px;
+/* Oferta: parte superior derecha */
+.celda-balance__oferta {
+  top: 8px;
+  right: 10px;
+  text-align: right;
 }
 
-.resumen-dato strong {
-  color: #0f172a;
-  font-size: 25px;
+/* Demanda: parte inferior izquierda */
+.celda-balance__demanda {
+  bottom: 8px;
+  left: 10px;
+  text-align: left;
 }
+
+/* Etiquetas */
+.celda-balance__oferta small,
+.celda-balance__demanda small {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Valores de los totales */
+.celda-balance__oferta strong,
+.celda-balance__demanda strong {
+  font-size: 19px;
+  font-weight: 800;
+}
+
 
 .estado {
   margin-top: 20px;
